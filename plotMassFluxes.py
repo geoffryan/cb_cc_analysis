@@ -15,9 +15,9 @@ def getDiagnostics(filename):
     _, _, _, diag, _, _ = util.loadDiagRZ(filename)
 
     NgRa = 2 if (pars['NoBC_Rmin'] == 0) else 0
-    NgRb = 2 if (pars['NoBC_Rmin'] == 0) else 0
+    NgRb = 2 if (pars['NoBC_Rmax'] == 0) else 0
 
-    Nr = rjph.shape[0] - 1 - NgRa - NgRb
+    Nr = pars['Num_R']
 
     a = NgRa
     b = NgRa + Nr
@@ -32,6 +32,11 @@ def getDiagnostics(filename):
     ss = ss[0, a:b, :]
     diag = diag[0, a:b, :]
 
+    if a == 0:
+        pad_vals = ((1, 0), (0, 0))
+        f = np.pad(f, pad_vals, constant_values=0.0)
+        fv = np.pad(fv, pad_vals, constant_values=0.0)
+
     return dict(t=t, dt=dt, rjph=rjph, rs=rs, f=f, fv=fv,
                 s=s, sg=sg, sv=sv, ss=ss, diag=diag)
 
@@ -44,13 +49,15 @@ def calc_mean_sd(f_t, dt):
 
     return f, df
 
-def plot_band(ax, r, f_t, dt, label, color, band=True):
+def plot_band(ax, r, f_t, dt, label, color, **kwargs):
+
+    band = kwargs.pop('band') if 'band' in kwargs else True
 
     f, df = calc_mean_sd(f_t, dt)
     
     if band:
         ax.fill_between(r, f-df, f+df, alpha=0.5, color=color, lw=0)
-    ax.plot(r, f, color=color, label=label)
+    ax.plot(r, f, color=color, label=label, **kwargs)
 
 def analyze(checkpoints):
 
@@ -86,7 +93,7 @@ def analyze(checkpoints):
 
     print("Calculating")
 
-    rf = rjph[1:-1]
+    rf = rjph.copy()
 
     rmin = rjph[0]
     rmax = rjph[-1]
@@ -102,19 +109,25 @@ def analyze(checkpoints):
     Jdot_adv_t = -2*np.pi*r[:, None] * diag_t[:, 4, :]
     Jdot_advAbs_t = -2*np.pi*r[:, None] * diag_t[:, 5, :]
 
-    Jdot_g1_t = -2*np.pi*r[:, None] * diag_t[:, 9, :]
-    Jdot_g2_t = -2*np.pi*r[:, None] * diag_t[:, 10, :]
-    Jdot_g_t = Jdot_g1_t + Jdot_g2_t
+    dTdr_g1_t = -2*np.pi*r[:, None] * diag_t[:, 9, :]
+    dTdr_g2_t = -2*np.pi*r[:, None] * diag_t[:, 10, :]
+    dTdr_g_t = dTdr_g1_t + dTdr_g2_t
 
-    Jdot_gs_t = -sg_t[:, 3, :]
-    Jdot_vs_t = -sv_t[:, 3, :]
+    dr = rjph[1:] - rjph[:-1]
+    dV = np.pi*(rjph[1:]+rjph[:-1]) * dr
+
+    dTdr_gs_t = sg_t[:, 3, :] / dr[:, None]
+    Jdot_gs_t = np.pad(sg_t[:, 3, :], ((1, 0), (0, 0)), constant_values=0.0
+            ).cumsum(axis=0)
 
     Jdot_advf_t = -f_t[:, 3, :]
     Jdot_vf_t = -fv_t[:, 3, :]
 
+    Jdot_t = Jdot_advf_t + Jdot_vf_t + Jdot_gs_t
+
     c = ['C{0:d}'.format(i) for i in range(10)]
 
-    fig, ax = plt.subplots(2, 3, figsize=(18, 9))
+    fig, ax = plt.subplots(2, 4, figsize=(24, 9))
     plot_band(ax[0, 0], r, Sig_t, dt, r"$\Sigma$", c[0],)
     plot_band(ax[0, 1], r, Mdot_in_t, dt, r"$\dot{M}_{\mathrm{in}}$", c[0])
     plot_band(ax[0, 1], r, Mdot_out_t, dt, r"$\dot{M}_{\mathrm{out}}$", c[1])
@@ -124,33 +137,49 @@ def analyze(checkpoints):
               c[0])
     plot_band(ax[0, 2], rf, Jdot_vf_t, dt, r"$\dot{J}_{\mathrm{visc}, f}$",
               c[1])
-    plot_band(ax[0, 2], r, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
+    plot_band(ax[0, 2], rf, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
               c[2])
+    plot_band(ax[0, 2], rf, Jdot_t, dt, r"$\dot{J}$",
+              'grey')
+    plot_band(ax[0, 3], r, dTdr_gs_t, dt, r"$dT/dr_{\mathrm{grav}, s}$",
+              c[2])
+    plot_band(ax[0, 3], r, dTdr_g_t, dt, r"$dT/dr_{\mathrm{grav}, pl}$",
+              c[3])
     plot_band(ax[1, 0], r, Sig_t, dt, r"$\Sigma$", c[0],)
     plot_band(ax[1, 1], r, Mdot_in_t, dt, r"$\dot{M}_{\mathrm{in}}$", c[0])
     plot_band(ax[1, 1], r, Mdot_out_t, dt, r"$\dot{M}_{\mathrm{out}}$", c[1])
     plot_band(ax[1, 1], r, Mdot_t, dt, r"$\dot{M}$", c[2])
     plot_band(ax[1, 1], rf, Mdotf_t, dt, r"$\dot{M}_f$", 'grey')
     plot_band(ax[1, 2], rf, Jdot_advf_t, dt, r"$\dot{J}_{\mathrm{adv}, f}$",
-              c[0])
+              c[0], band=False)
     plot_band(ax[1, 2], rf, Jdot_vf_t, dt, r"$\dot{J}_{\mathrm{visc}, f}$",
-              c[1])
-    plot_band(ax[1, 2], r, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
-              c[2])
+              c[1], band=False)
+    plot_band(ax[1, 2], rf, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
+              c[2], band=False)
+    plot_band(ax[1, 2], rf, Jdot_t, dt, r"$\dot{J}$",
+              'grey', band=False)
+    plot_band(ax[1, 3], r, dTdr_gs_t, dt, r"$dT/dr_{\mathrm{grav}, s}$",
+              c[2], band=False)
+    plot_band(ax[1, 3], r, dTdr_g_t, dt, r"$dT/dr_{\mathrm{grav}, pl}$",
+              c[3], band=False)
 
     ax[0, 0].legend()
     ax[0, 1].legend()
     ax[0, 2].legend()
+    ax[0, 3].legend()
 
     ax[0, 0].set(xlim=(rmin, rmax), ylabel=r'$\Sigma$')
     ax[0, 1].set(xlim=(rmin, rmax), ylabel=r'$\dot{M}$')
     ax[0, 2].set(xlim=(rmin, rmax), ylabel=r'$\dot{J}$')
+    ax[0, 3].set(xlim=(rmin, rmax), ylabel=r'$dT/dr$')
     ax[1, 0].set(xlim=(rjph[1], rmax), xscale='log', yscale='log',
                  ylabel=r'$\Sigma$')
     ax[1, 1].set(xlim=(rjph[1], rmax), xscale='log', yscale='log',
                  ylabel=r'$\dot{M}$')
-    ax[1, 2].set(xlim=(rjph[1], rmax), xscale='log', yscale='log',
+    ax[1, 2].set(xlim=(rjph[1], rmax), xscale='log',
                  ylabel=r'$\dot{J}$')
+    ax[1, 3].set(xlim=(rjph[1], rmax), xscale='log',
+                 ylabel=r'$dT/dr$')
 
     fig.tight_layout()
 
