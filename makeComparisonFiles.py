@@ -182,13 +182,14 @@ def makeSnapshotBin(chkFile, label):
 
 if __name__ == "__main__":
 
-    filenames = [Path(x) for x in sys.argv[1:]]
+    filenames = [Path(x) for x in sys.argv[1:-1]]
     reportFile = filenames[0]
     checkpointFiles = filenames[1:]
+    name = sys.argv[-1]
 
     pars = util.loadPars(checkpointFiles[0])
 
-    label = "ryan_disco_{0:04d}".format(pars['Num_R'])
+    label = "ryan_disco_{0:s}_{1:04d}".format(name, pars['Num_R'])
 
     makeTimeseries(reportFile, pars, label)
     
