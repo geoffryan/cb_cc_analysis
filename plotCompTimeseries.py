@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     filenames = [Path(x) for x in sys.argv[1:]]
 
-    tmin = 0.0
-    tmax = 500.0
+    tmin = 290.0
+    tmax = 300.0
 
     fig, ax = plt.subplots(2, 4, figsize=(15, 9))
 
