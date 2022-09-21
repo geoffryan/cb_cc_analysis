@@ -14,7 +14,7 @@ class CheckpointDiagnostics:
         self.idx = 0
 
 
-    def addCheckpoint(self, filename)
+    def addCheckpoint(self, filename):
         pars = util.loadPars(filename)
         opts = util.loadOpts(filename)
 
@@ -40,7 +40,7 @@ class CheckpointDiagnostics:
         bf = b
         
         r = rs[0, a:b]
-        rf = rf[a:b+1]
+        rf = rf[0, a:b+1]
 
         if self.Nr is None:
             self._initialize_arrays(r, rf)
@@ -55,8 +55,8 @@ class CheckpointDiagnostics:
         self.MdotAbs_c[:, self.idx] = -diag[0, a:b, 2] * self.dA
         self.JdotAdv_c[:, self.idx] = -diag[0, a:b, 4] * self.dA
         self.JdotAdvAbs_c[:, self.idx] = -diag[0, a:b, 5] * self.dA
-        self.dTdr_g1_c[:, self.idx = diag[0, a:b, 9] * self.dV/self.dr
-        self.dTdr_g2_c[:, self.idx = diag[0, a:b, 10] * self.dV/self.dr
+        self.dTdr_g1_c[:, self.idx] = diag[0, a:b, 9] * self.dV/self.dr
+        self.dTdr_g2_c[:, self.idx] = diag[0, a:b, 10] * self.dV/self.dr
 
         self.Mdot_f[ia:, self.idx] = -f[0, af:bf, 0]
         self.Jdot_f[ia:, self.idx] = -f[0, af:bf, 3]
@@ -67,32 +67,33 @@ class CheckpointDiagnostics:
 
     def _initialize_arrays(self, r, rf):
 
-        self.Nr = len(r)
+        Nr = len(r)
+        self.Nr = Nr
 
         self.r = r
         self.rf = rf
 
         self.dr = rf[1:] - rf[:-1]
         self.dA = 2*np.pi * r
-        self.dV = np.pi * (rf[1:] + rf[:-1]) * dr
+        self.dV = np.pi * (rf[1:] + rf[:-1]) * self.dr
 
-        self.Sig = np.empty((Nr, N))
-        self.j = np.empty((Nr, N))
+        self.Sig = np.empty((Nr, self.N))
+        self.j = np.empty((Nr, self.N))
         
-        self.Mdot_f = np.zeros((Nr+1, N))
-        self.Mdot_s = np.zeros((Nr+1, N))
+        self.Mdot_f = np.zeros((Nr+1, self.N))
+        self.Mdot_s = np.zeros((Nr+1, self.N))
         
-        self.Jdot_f = np.zeros((Nr+1, N))
-        self.Jdot_v = np.zeros((Nr+1, N))
-        self.Jdot_s = np.zeros((Nr+1, N))
-        self.Jdot_g = np.zeros((Nr+1, N))
+        self.Jdot_f = np.zeros((Nr+1, self.N))
+        self.Jdot_v = np.zeros((Nr+1, self.N))
+        self.Jdot_s = np.zeros((Nr+1, self.N))
+        self.Jdot_g = np.zeros((Nr+1, self.N))
 
-        self.Mdot_c = np.empty((Nr, N))
-        self.MdotAbs_c = np.empty((Nr, N))
-        self.Jdot_c = np.empty((Nr, N))
-        self.JdotAbs_c = np.empty((Nr, N))
-        self.Jdot_g1_c = np.empty((Nr, N))
-        self.Jdot_g2_c = np.empty((Nr, N))
+        self.Mdot_c = np.empty((Nr, self.N))
+        self.MdotAbs_c = np.empty((Nr, self.N))
+        self.JdotAdv_c = np.empty((Nr, self.N))
+        self.JdotAdvAbs_c = np.empty((Nr, self.N))
+        self.dTdr_g1_c = np.empty((Nr, self.N))
+        self.dTdr_g2_c = np.empty((Nr, self.N))
 
 
 def calc_mean_sd(f_t, dt):
@@ -134,9 +135,9 @@ def analyze(reportFile, checkpoints):
     c = ['C{0:d}'.format(i) for i in range(10)]
 
     fig, ax = plt.subplots(3, 4, figsize=(24, 9))
-    plot_band(ax[0, 0], r, gas.Sig, dt, r"$\Sigma$", c[0],)
-    plot_band(ax[1, 0], r, gas.Sig, dt, r"$\Sigma$", c[0],)
-    plot_band(ax[2, 0], r, gas.Sig, dt, r"$\Sigma$", c[0],)
+    plot_band(ax[0, 0], r, gas.Sig, gas.dt, r"$\Sigma$", c[0],)
+    plot_band(ax[1, 0], r, gas.Sig, gas.dt, r"$\Sigma$", c[0],)
+    plot_band(ax[2, 0], r, gas.Sig, gas.dt, r"$\Sigma$", c[0],)
 
     """
     plot_band(ax[0, 1], r, Mdot_in_t, dt, r"$\dot{M}_{\mathrm{in}}$", c[0])
@@ -178,8 +179,9 @@ def analyze(reportFile, checkpoints):
     ax[0, 2].legend()
     ax[0, 3].legend()
 
-    ax[0, 0].set(xlim=(rmin, rmax), ylabel=r'$\Sigma$')
-    ax[1, 0].set(xlim=(0, 10), xscale='log', yscale='log',
+    ax[0, 0].set(xlim=(rmin, rmax), xscale='linear',
+                 ylabel=r'$\Sigma$')
+    ax[1, 0].set(xlim=(0, 10), xscale='linear', yscale='linear',
                  ylabel=r'$\Sigma$')
     ax[2, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log',
                  ylabel=r'$\Sigma$')
@@ -211,12 +213,13 @@ def analyze(reportFile, checkpoints):
 
 if __name__ == "__main__":
 
-    filenames = [Path(x) for x in sys.argv[1:]]
+    reportFile = Path(sys.argv[1])
+    filenames = [Path(x) for x in sys.argv[2:]]
 
     if len(filenames) == 0:
-        print("Need some checkpoints!")
+        print("Need a report and some checkpoints!")
         sys.exit()
     
-    analyze(filenames)
+    analyze(reportFile, filenames)
 
     
