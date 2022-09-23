@@ -317,74 +317,80 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
     c = ['C{0:d}'.format(i) for i in range(10)]
 
     fig, ax = plt.subplots(3, 7, figsize=(24, 9))
-    for axis in ax[:, 0]:
+    for i, axis in enumerate(ax[:, 0]):
         plot_band(axis, r, gas.Sig,
                   gas.dt, r"$\Sigma$", c[0], band=showVariance)
         axis.set(ylabel=r"$\Sigma$")
 
-    for axis in ax[:, 1]:
-        plot_band(axis, rf, gas.Mdot_f,
-                  gas.dt, r"Flux", c[1], band=showVariance)
-        plot_band(axis, rf, gas.Mdot_s,
-                  gas.dt, r"Sink", c[2], band=showVariance)
+    for i, axis in enumerate(ax[:, 1]):
+        if i < 2:
+            plot_band(axis, rf, gas.Mdot_f,
+                      gas.dt, r"Flux", c[1], band=showVariance)
+            plot_band(axis, rf, gas.Mdot_s,
+                      gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f,
                   gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{M}$ - gas on the grid")
 
-    for axis in ax[:, 2]:
-        plot_band(axis, rf, gas.Mdot_f,
-                  gas.dt, r"Flux", c[1], band=showVariance)
-        plot_band(axis, rf, gas.Mdot_s - gas.Mdot_s[-1],
-                  gas.dt, r"Sink", c[2], band=showVariance)
+    for i, axis in enumerate(ax[:, 2]):
+        if i < 2:
+            plot_band(axis, rf, gas.Mdot_f,
+                      gas.dt, r"Flux", c[1], band=showVariance)
+            plot_band(axis, rf, gas.Mdot_s - gas.Mdot_s[-1],
+                      gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f - gas.Mdot_s[-1],
                   gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{M}$ - total")
 
-    for axis in ax[:, 3]:
-        plot_band(axis, r, np.diff(gas.Mdot_f, axis=0)/dr[:, None],
-                  gas.dt, r"Flux", c[1], band=showVariance)
-        plot_band(axis, r, np.diff(gas.Mdot_s, axis=0)/dr[:, None],
-                  gas.dt, r"Sink", c[2], band=showVariance)
+    for i, axis in enumerate(ax[:, 3]):
+        if i < 2:
+            plot_band(axis, r, np.diff(gas.Mdot_f, axis=0)/dr[:, None],
+                      gas.dt, r"Flux", c[1], band=showVariance)
+            plot_band(axis, r, np.diff(gas.Mdot_s, axis=0)/dr[:, None],
+                      gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, r, np.diff(gas.Mdot_s + gas.Mdot_f, axis=0)/dr[:, None],
                   gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$d\dot{M}/dr$")
     
-    for axis in ax[:, 4]:
-        plot_band(axis, rf, gas.Jdot_f,
-                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_v,
-                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_g,
-                  gas.dt, r"Grav. Source", c[3], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_s,
-                  gas.dt, r"Sink Source", c[4], band=showVariance)
+    for i, axis in enumerate(ax[:, 4]):
+        if i < 2:
+            plot_band(axis, rf, gas.Jdot_f,
+                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_v,
+                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_g,
+                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_s,
+                      gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v + gas.Jdot_g + gas.Jdot_s,
                   gas.dt, r"$\dot{J}$", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{J}$ - gas on the grid")
     
-    for axis in ax[:, 5]:
-        plot_band(axis, rf, gas.Jdot_f,
-                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_v,
-                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_g - gas.Jdot_g[-1],
-                  gas.dt, r"Grav. Source", c[3], band=showVariance)
-        plot_band(axis, rf, gas.Jdot_s - gas.Jdot_s[-1],
-                  gas.dt, r"Sink Source", c[4], band=showVariance)
+    for i, axis in enumerate(ax[:, 5]):
+        if i < 2:
+            plot_band(axis, rf, gas.Jdot_f,
+                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_v,
+                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_g - gas.Jdot_g[-1],
+                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+            plot_band(axis, rf, gas.Jdot_s - gas.Jdot_s[-1],
+                      gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v
                 + (gas.Jdot_g - gas.Jdot_g[-1]) + (gas.Jdot_s - gas.Jdot_s[-1]),
                   gas.dt, r"$\dot{J}$", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{J}$ - total")
     
-    for axis in ax[:, 6]:
-        plot_band(axis, r, np.diff(gas.Jdot_f, axis=0) / dr[:, None],
-                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
-        plot_band(axis, r, np.diff(gas.Jdot_v, axis=0) / dr[:, None],
-                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
-        plot_band(axis, r, np.diff(gas.Jdot_g, axis=0) / dr[:, None],
-                  gas.dt, r"Grav. Source", c[3], band=showVariance)
-        plot_band(axis, r, np.diff(gas.Jdot_s, axis=0) / dr[:, None],
-                  gas.dt, r"Sink Source", c[4], band=showVariance)
+    for i, axis in enumerate(ax[:, 6]):
+        if i < 2:
+            plot_band(axis, r, np.diff(gas.Jdot_f, axis=0) / dr[:, None],
+                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+            plot_band(axis, r, np.diff(gas.Jdot_v, axis=0) / dr[:, None],
+                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+            plot_band(axis, r, np.diff(gas.Jdot_g, axis=0) / dr[:, None],
+                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+            plot_band(axis, r, np.diff(gas.Jdot_s, axis=0) / dr[:, None],
+                      gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, r, np.diff(gas.Jdot_f + gas.Jdot_v + gas.Jdot_g
                                     + gas.Jdot_s, axis=0) / dr[:, None],
                   gas.dt, r"$\dot{J}$", c[0], band=showVariance)
@@ -397,8 +403,9 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
     for axis in ax[1, :]:
         axis.set(xlim=(0, 10), xscale='linear')
     
-    for axis in ax[2, :]:
-        axis.set(xlim=(0.1, rmax), xscale='log', yscale='log')
+    ax[2, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
+    for axis in ax[2, 1:]:
+        axis.set(xlim=(0.1, rmax), xscale='log', yscale='linear')
     
 
     fig.tight_layout()
