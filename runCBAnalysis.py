@@ -300,6 +300,11 @@ def analyze(reportFile, checkpoints):
         gas.addCheckpoint(checkpoint)
 
     makeCheckpointConsistencyPlots(gas, checkpoints[0], checkpoints[-1])
+    makeGasSummaryPlot(reportFile, gas, True, "withVar")
+    makeGasSummaryPlot(reportFile, gas, False, "noVar")
+
+
+def makeGasSummaryPlot(report, gas, showVariance, label):
 
     r = gas.r
     rf = gas.rf
@@ -313,102 +318,77 @@ def analyze(reportFile, checkpoints):
 
     fig, ax = plt.subplots(3, 7, figsize=(24, 9))
     for axis in ax[:, 0]:
-        plot_band(axis, r, gas.Sig, gas.dt, r"$\Sigma$", c[0],)
+        plot_band(axis, r, gas.Sig,
+                  gas.dt, r"$\Sigma$", c[0], band=showVariance)
         axis.set(ylabel=r"$\Sigma$")
 
     for axis in ax[:, 1]:
-        plot_band(axis, rf, gas.Mdot_f, gas.dt, r"Flux", c[1])
-        plot_band(axis, rf, gas.Mdot_s, gas.dt, r"Sink", c[2])
+        plot_band(axis, rf, gas.Mdot_f,
+                  gas.dt, r"Flux", c[1], band=showVariance)
+        plot_band(axis, rf, gas.Mdot_s,
+                  gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f,
-                  gas.dt, r"Total", c[0])
+                  gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{M}$ - gas on the grid")
 
     for axis in ax[:, 2]:
-        plot_band(axis, rf, gas.Mdot_f, gas.dt, r"Flux", c[1])
+        plot_band(axis, rf, gas.Mdot_f,
+                  gas.dt, r"Flux", c[1], band=showVariance)
         plot_band(axis, rf, gas.Mdot_s - gas.Mdot_s[-1],
-                  gas.dt, r"Sink", c[2])
+                  gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f - gas.Mdot_s[-1],
-                  gas.dt, r"Total", c[0])
+                  gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{M}$ - total")
 
     for axis in ax[:, 3]:
         plot_band(axis, r, np.diff(gas.Mdot_f, axis=0)/dr[:, None],
-                  gas.dt, r"Flux", c[1])
+                  gas.dt, r"Flux", c[1], band=showVariance)
         plot_band(axis, r, np.diff(gas.Mdot_s, axis=0)/dr[:, None],
-                  gas.dt, r"Sink", c[2])
+                  gas.dt, r"Sink", c[2], band=showVariance)
         plot_band(axis, r, np.diff(gas.Mdot_s + gas.Mdot_f, axis=0)/dr[:, None],
-                  gas.dt, r"Total", c[0])
+                  gas.dt, r"Total", c[0], band=showVariance)
         axis.set(ylabel=r"$d\dot{M}/dr$")
     
     for axis in ax[:, 4]:
-        plot_band(axis, rf, gas.Jdot_f, gas.dt, r"Adv. Flux", c[1])
-        plot_band(axis, rf, gas.Jdot_v, gas.dt, r"Visc. Flux", c[2])
-        plot_band(axis, rf, gas.Jdot_g, gas.dt, r"Grav. Source", c[3])
-        plot_band(axis, rf, gas.Jdot_s, gas.dt, r"Sink Source", c[4])
+        plot_band(axis, rf, gas.Jdot_f,
+                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
+        plot_band(axis, rf, gas.Jdot_v,
+                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
+        plot_band(axis, rf, gas.Jdot_g,
+                  gas.dt, r"Grav. Source", c[3], band=showVariance)
+        plot_band(axis, rf, gas.Jdot_s,
+                  gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v + gas.Jdot_g + gas.Jdot_s,
-                  gas.dt, r"$\dot{J}$", c[0])
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{J}$ - gas on the grid")
     
     for axis in ax[:, 5]:
-        plot_band(axis, rf, gas.Jdot_f, gas.dt, r"Adv. Flux", c[1])
-        plot_band(axis, rf, gas.Jdot_v, gas.dt, r"Visc. Flux", c[2])
+        plot_band(axis, rf, gas.Jdot_f,
+                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
+        plot_band(axis, rf, gas.Jdot_v,
+                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
         plot_band(axis, rf, gas.Jdot_g - gas.Jdot_g[-1],
-                  gas.dt, r"Grav. Source", c[3])
+                  gas.dt, r"Grav. Source", c[3], band=showVariance)
         plot_band(axis, rf, gas.Jdot_s - gas.Jdot_s[-1],
-                  gas.dt, r"Sink Source", c[4])
+                  gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v
                 + (gas.Jdot_g - gas.Jdot_g[-1]) + (gas.Jdot_s - gas.Jdot_s[-1]),
-                  gas.dt, r"$\dot{J}$", c[0])
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
         axis.set(ylabel=r"$\dot{J}$ - total")
     
     for axis in ax[:, 6]:
         plot_band(axis, r, np.diff(gas.Jdot_f, axis=0) / dr[:, None],
-                  gas.dt, r"Adv. Flux", c[1])
+                  gas.dt, r"Adv. Flux", c[1], band=showVariance)
         plot_band(axis, r, np.diff(gas.Jdot_v, axis=0) / dr[:, None],
-                  gas.dt, r"Visc. Flux", c[2])
+                  gas.dt, r"Visc. Flux", c[2], band=showVariance)
         plot_band(axis, r, np.diff(gas.Jdot_g, axis=0) / dr[:, None],
-                  gas.dt, r"Grav. Source", c[3])
+                  gas.dt, r"Grav. Source", c[3], band=showVariance)
         plot_band(axis, r, np.diff(gas.Jdot_s, axis=0) / dr[:, None],
-                  gas.dt, r"Sink Source", c[4])
+                  gas.dt, r"Sink Source", c[4], band=showVariance)
         plot_band(axis, r, np.diff(gas.Jdot_f + gas.Jdot_v + gas.Jdot_g
                                     + gas.Jdot_s, axis=0) / dr[:, None],
-                  gas.dt, r"$\dot{J}$", c[0])
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
         axis.set(ylabel=r"$d\dot{J}/dr$")
-
-    """
-    plot_band(ax[0, 1], r, Mdot_in_t, dt, r"$\dot{M}_{\mathrm{in}}$", c[0])
-    plot_band(ax[0, 1], r, Mdot_out_t, dt, r"$\dot{M}_{\mathrm{out}}$", c[1])
-    plot_band(ax[0, 1], r, Mdot_t, dt, r"$\dot{M}$", c[2])
-    plot_band(ax[0, 1], rf, Mdotf_t, dt, r"$\dot{M}_f$", 'grey')
-    plot_band(ax[0, 2], rf, Jdot_advf_t, dt, r"$\dot{J}_{\mathrm{adv}, f}$",
-              c[0])
-    plot_band(ax[0, 2], rf, Jdot_vf_t, dt, r"$\dot{J}_{\mathrm{visc}, f}$",
-              c[1])
-    plot_band(ax[0, 2], rf, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
-              c[2])
-    plot_band(ax[0, 2], rf, Jdot_t, dt, r"$\dot{J}$",
-              'grey')
-    plot_band(ax[0, 3], r, dTdr_gs_t, dt, r"$dT/dr_{\mathrm{grav}, s}$",
-              c[2])
-    plot_band(ax[0, 3], r, dTdr_g_t, dt, r"$dT/dr_{\mathrm{grav}, pl}$",
-              c[3])
-    plot_band(ax[1, 1], r, Mdot_in_t, dt, r"$\dot{M}_{\mathrm{in}}$", c[0])
-    plot_band(ax[1, 1], r, Mdot_out_t, dt, r"$\dot{M}_{\mathrm{out}}$", c[1])
-    plot_band(ax[1, 1], r, Mdot_t, dt, r"$\dot{M}$", c[2])
-    plot_band(ax[1, 1], rf, Mdotf_t, dt, r"$\dot{M}_f$", 'grey')
-    plot_band(ax[1, 2], rf, Jdot_advf_t, dt, r"$\dot{J}_{\mathrm{adv}, f}$",
-              c[0], band=False)
-    plot_band(ax[1, 2], rf, Jdot_vf_t, dt, r"$\dot{J}_{\mathrm{visc}, f}$",
-              c[1], band=False)
-    plot_band(ax[1, 2], rf, Jdot_gs_t, dt, r"$\dot{J}_{\mathrm{grav}, s}$",
-              c[2], band=False)
-    plot_band(ax[1, 2], rf, Jdot_t, dt, r"$\dot{J}$",
-              'grey', band=False)
-    plot_band(ax[1, 3], r, dTdr_gs_t, dt, r"$dT/dr_{\mathrm{grav}, s}$",
-              c[2], band=False)
-    plot_band(ax[1, 3], r, dTdr_g_t, dt, r"$dT/dr_{\mathrm{grav}, pl}$",
-              c[3], band=False)
-    """
 
     for axis in ax[0, :]:
         axis.set(xlim=(rmin, rmax), xscale='linear')
@@ -420,29 +400,17 @@ def analyze(reportFile, checkpoints):
     for axis in ax[2, :]:
         axis.set(xlim=(0.1, rmax), xscale='log', yscale='log')
     
-    """
-    ax[0, 1].set(xlim=(rmin, rmax), ylabel=r'$\dot{M}$')
-    ax[0, 2].set(xlim=(rmin, rmax), ylabel=r'$\dot{J}$')
-    ax[0, 3].set(xlim=(rmin, rmax), ylabel=r'$dT/dr$')
-    ax[1, 1].set(xlim=(rjph[1], rmax), xscale='log', yscale='log',
-                 ylabel=r'$\dot{M}$')
-    ax[1, 2].set(xlim=(rjph[1], rmax), xscale='log',
-                 ylabel=r'$\dot{J}$')
-    ax[1, 3].set(xlim=(rjph[1], rmax), xscale='log',
-                 ylabel=r'$dT/dr$')
-    """
 
     fig.tight_layout()
 
-    figname = "summary.pdf"
+    figname = "gasSummary_{0:s}.pdf".format(label)
     print("Saving", figname)
     fig.savefig(figname)
 
-    figname = "summary.png"
+    figname = "gasSummary_{0:s}.png".format(label)
     print("Saving", figname)
     fig.savefig(figname)
     plt.close(fig)
-
 
 
 
