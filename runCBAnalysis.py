@@ -116,8 +116,15 @@ def calc_mean_sd(f_t, dt):
 def plot_band(ax, r, f_t, dt, label, color, **kwargs):
 
     band = kwargs.pop('band') if 'band' in kwargs else True
+    xlim = kwargs.pop('xlim') if 'xlim' in kwargs else None
 
     f, df = calc_mean_sd(f_t, dt)
+
+    if xlim is not None:
+        idx = (r >= xlim[0]) & (r <= xlim[1])
+        r = r.copy()[idx]
+        f = f[idx]
+        df = df[idx]
     
     if band:
         ax.fill_between(r, f-df, f+df, alpha=0.5, color=color, lw=0)
@@ -316,6 +323,9 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
 
     c = ['C{0:d}'.format(i) for i in range(10)]
 
+    rmin_zoom = rmin
+    rmax_zoom = 10.0
+
     fig, ax = plt.subplots(4, 7, figsize=(24, 9))
 
     for i, axis in enumerate(ax[:, 0]):
@@ -324,77 +334,111 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
         axis.set(ylabel=r"$\Sigma$")
 
     for i, axis in enumerate(ax[:, 1]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, rf, gas.Mdot_f,
-                      gas.dt, r"Flux", c[1], band=showVariance)
+                      gas.dt, r"Flux", c[1], band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Mdot_s,
-                      gas.dt, r"Sink", c[2], band=showVariance)
+                      gas.dt, r"Sink", c[2], band=showVariance, xlim=rlim)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f,
-                  gas.dt, r"Total", c[0], band=showVariance)
+                  gas.dt, r"Total", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$\dot{M}$ - gas on the grid")
 
     for i, axis in enumerate(ax[:, 2]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, rf, gas.Mdot_f,
-                      gas.dt, r"Flux", c[1], band=showVariance)
+                      gas.dt, r"Flux", c[1], band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Mdot_s - gas.Mdot_s[-1],
-                      gas.dt, r"Sink", c[2], band=showVariance)
+                      gas.dt, r"Sink", c[2], band=showVariance, xlim=rlim)
         plot_band(axis, rf, gas.Mdot_s + gas.Mdot_f - gas.Mdot_s[-1],
-                  gas.dt, r"Total", c[0], band=showVariance)
+                  gas.dt, r"Total", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$\dot{M}$ - total")
 
     for i, axis in enumerate(ax[:, 3]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, r, np.diff(gas.Mdot_f, axis=0)/dr[:, None],
-                      gas.dt, r"Flux", c[1], band=showVariance)
+                      gas.dt, r"Flux", c[1], band=showVariance, xlim=rlim)
             plot_band(axis, r, np.diff(gas.Mdot_s, axis=0)/dr[:, None],
-                      gas.dt, r"Sink", c[2], band=showVariance)
+                      gas.dt, r"Sink", c[2], band=showVariance, xlim=rlim)
         plot_band(axis, r, np.diff(gas.Mdot_s + gas.Mdot_f, axis=0)/dr[:, None],
-                  gas.dt, r"Total", c[0], band=showVariance)
+                  gas.dt, r"Total", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$d\dot{M}/dr$")
     
     for i, axis in enumerate(ax[:, 4]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, rf, gas.Jdot_f,
-                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+                      gas.dt, r"Adv. Flux", c[1],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_v,
-                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+                      gas.dt, r"Visc. Flux", c[2],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_g,
-                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+                      gas.dt, r"Grav. Source", c[3],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_s,
-                      gas.dt, r"Sink Source", c[4], band=showVariance)
+                      gas.dt, r"Sink Source", c[4],
+                      band=showVariance, xlim=rlim)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v + gas.Jdot_g + gas.Jdot_s,
-                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$\dot{J}$ - gas on the grid")
     
     for i, axis in enumerate(ax[:, 5]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, rf, gas.Jdot_f,
-                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+                      gas.dt, r"Adv. Flux", c[1],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_v,
-                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+                      gas.dt, r"Visc. Flux", c[2],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_g - gas.Jdot_g[-1],
-                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+                      gas.dt, r"Grav. Source", c[3],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, rf, gas.Jdot_s - gas.Jdot_s[-1],
-                      gas.dt, r"Sink Source", c[4], band=showVariance)
+                      gas.dt, r"Sink Source", c[4],
+                      band=showVariance, xlim=rlim)
         plot_band(axis, rf, gas.Jdot_f + gas.Jdot_v
                 + (gas.Jdot_g - gas.Jdot_g[-1]) + (gas.Jdot_s - gas.Jdot_s[-1]),
-                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$\dot{J}$ - total")
     
     for i, axis in enumerate(ax[:, 6]):
+        if i % 2 == 0:
+            rlim = None
+        else:
+            rlim = (rmin_zoom, rmax_zoom)
         if i < 2:
             plot_band(axis, r, np.diff(gas.Jdot_f, axis=0) / dr[:, None],
-                      gas.dt, r"Adv. Flux", c[1], band=showVariance)
+                      gas.dt, r"Adv. Flux", c[1], band=showVariance, xlim=rlim)
             plot_band(axis, r, np.diff(gas.Jdot_v, axis=0) / dr[:, None],
-                      gas.dt, r"Visc. Flux", c[2], band=showVariance)
+                      gas.dt, r"Visc. Flux", c[2], band=showVariance, xlim=rlim)
             plot_band(axis, r, np.diff(gas.Jdot_g, axis=0) / dr[:, None],
-                      gas.dt, r"Grav. Source", c[3], band=showVariance)
+                      gas.dt, r"Grav. Source", c[3],
+                      band=showVariance, xlim=rlim)
             plot_band(axis, r, np.diff(gas.Jdot_s, axis=0) / dr[:, None],
-                      gas.dt, r"Sink Source", c[4], band=showVariance)
+                      gas.dt, r"Sink Source", c[4],
+                      band=showVariance, xlim=rlim)
         plot_band(axis, r, np.diff(gas.Jdot_f + gas.Jdot_v + gas.Jdot_g
                                     + gas.Jdot_s, axis=0) / dr[:, None],
-                  gas.dt, r"$\dot{J}$", c[0], band=showVariance)
+                  gas.dt, r"$\dot{J}$", c[0], band=showVariance, xlim=rlim)
         axis.set(ylabel=r"$d\dot{J}/dr$")
 
     for axis in ax[0, :]:
@@ -402,7 +446,7 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
         axis.legend()
     
     for axis in ax[1, :]:
-        axis.set(xlim=(rmin, 10), xscale='linear')
+        axis.set(xlim=(rmin_zoom, rmax_zoom), xscale='linear')
     
     ax[2, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
     for axis in ax[2, 1:]:
@@ -410,7 +454,9 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
     
     ax[3, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
     for axis in ax[3, 1:]:
-        axis.set(xlim=(rmin, 10), xscale='linear', yscale='linear')
+        axis.set(xlim=(rmin_zoom, rmax_zoom), xscale='linear',
+                 yscale='linear')
+        # axis.margins(y=0.05, tight=True)
     
 
     fig.tight_layout()
