@@ -324,7 +324,7 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
     c = ['C{0:d}'.format(i) for i in range(10)]
 
     rmin_zoom = rmin
-    rmax_zoom = 10.0
+    rmax_zoom = 6.0
 
     fig, ax = plt.subplots(4, 7, figsize=(24, 9))
 
