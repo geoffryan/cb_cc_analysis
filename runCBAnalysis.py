@@ -316,7 +316,8 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
 
     c = ['C{0:d}'.format(i) for i in range(10)]
 
-    fig, ax = plt.subplots(3, 7, figsize=(24, 9))
+    fig, ax = plt.subplots(4, 7, figsize=(24, 9))
+
     for i, axis in enumerate(ax[:, 0]):
         plot_band(axis, r, gas.Sig,
                   gas.dt, r"$\Sigma$", c[0], band=showVariance)
@@ -401,11 +402,15 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
         axis.legend()
     
     for axis in ax[1, :]:
-        axis.set(xlim=(0, 10), xscale='linear')
+        axis.set(xlim=(rmin, 10), xscale='linear')
     
     ax[2, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
     for axis in ax[2, 1:]:
-        axis.set(xlim=(0.1, rmax), xscale='linear', yscale='linear')
+        axis.set(xlim=(rmin, rmax), xscale='linear', yscale='linear')
+    
+    ax[3, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
+    for axis in ax[3, 1:]:
+        axis.set(xlim=(rmin, 10), xscale='linear', yscale='linear')
     
 
     fig.tight_layout()
