@@ -405,7 +405,7 @@ def makeGasSummaryPlot(report, gas, showVariance, label):
     
     ax[2, 0].set(xlim=(0.1, rmax), xscale='log', yscale='log')
     for axis in ax[2, 1:]:
-        axis.set(xlim=(0.1, rmax), xscale='log', yscale='linear')
+        axis.set(xlim=(0.1, rmax), xscale='linear', yscale='linear')
     
 
     fig.tight_layout()
