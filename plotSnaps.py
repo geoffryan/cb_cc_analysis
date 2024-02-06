@@ -8,7 +8,30 @@ minidisk_rmax = 1.0
 minidisk_Nr = 30
 minidisk_Nq = 20
 
-def makeSummPlot(r, data, figname):
+def collapse(rf, data):
+
+    Npl, Nr, Nq = data.shape
+
+    Nr2 = (Nr+1)//2
+
+    rf2 = np.empty(Nr2+1)
+    rf2[:-1] = rf[:-1:2]
+    rf2[-1] = rf[-1]
+
+    data2 = np.empty((Npl, Nr2, Nq))
+
+    for i in range(Nr2):
+        a = 2*i
+        b = min(2*i+2, Nr)
+        data2[:, i, :] = data[:, a:b, :].sum(axis=1)
+
+    return rf2, data2
+
+def makeSummPlot(rf, data, figname):
+    
+    a = rf[:-1]
+    b = rf[1:]
+    r =  2.0/3.0 *  (a*a + a*b + b*b) / (a + b)
 
     dV = data[:, :, 0]
     dM = data[:, :, 1]
@@ -70,6 +93,34 @@ def makeSummPlot(r, data, figname):
     fig.savefig(figname)
     plt.close(fig)
 
+def makeTimeseriesPlot(t, data, figname):
+    
+    data_tot = data.sum(axis=2)
+
+    to = t / (2*np.pi)
+
+    V = data_tot[:, :, 0]
+    M = data_tot[:, :, 1]
+    J = data_tot[:, :, 3]
+    
+    fig, ax = plt.subplots(1, 3, figsize=(12, 6))
+    ax[0].plot(to, V[:, 0])
+    ax[0].plot(to, V[:, 1])
+    ax[1].plot(to, M[:, 0])
+    ax[1].plot(to, M[:, 1])
+    ax[2].plot(to, J[:, 0])
+    ax[2].plot(to, J[:, 1])
+
+    ax[0].set(ylabel=r'$V$', xlabel=r'$t$ (orb)')
+    ax[1].set(ylabel=r'$M$', xlabel=r'$t$ (orb)')
+    ax[2].set(ylabel=r'$J$', xlabel=r'$t$ (orb)')
+
+    fig.tight_layout()
+
+    print("Saving", figname)
+    fig.savefig(figname)
+    plt.close(fig)
+
 
 def analyzeSnap(filename):
 
@@ -78,14 +129,11 @@ def analyzeSnap(filename):
     data = Qarr.reshape((2, minidisk_Nr, minidisk_Nq))
 
     r_e = np.linspace(0.0, minidisk_rmax, minidisk_Nr+1)
-    a = r_e[:-1]
-    b = r_e[1:]
-    r =  2.0/3.0 *  (a*a + a*b + b*b) / (a + b)
 
     name = (filename.stem).split("_")[-1]
     figname = "snap_summary_{0:s}.png".format(name)
 
-    makeSummPlot(r, data, figname)
+    makeSummPlot(*(collapse(r_e, data)), figname)
 
     return t, data
 
@@ -102,7 +150,7 @@ if __name__ == "__main__":
     for i, name in enumerate(snapNames):
         t[i], data[i] = analyzeSnap(name)
 
-    dat = data.sum(axis=0)
+    dat = data.mean(axis=0)
 
     r_e = np.linspace(0.0, minidisk_rmax, minidisk_Nr+1)
     a = r_e[:-1]
@@ -111,7 +159,9 @@ if __name__ == "__main__":
 
     figname = "snap_summary_avg.png".format(name)
 
-    makeSummPlot(r, dat, figname)
+    makeSummPlot(*(collapse(r_e, dat)), figname)
+
+    makeTimeseriesPlot(t, data, "snap_summary_t.png")
 
 
 
